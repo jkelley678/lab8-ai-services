@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chat Assistant</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <simple-chat>
+    <title-text>
+      <h1>Chat Assistant</h1>
+      <div class="controls-header">
+        <button id="clear-button">Clear</button>
+        <button id="export-button">Export</button>
+        <button id="import-button">Import</button>
+        <div class="header-right">
+          <span id="message-count">0</span> messages
+        </div>
+      </div>
+    </title-text>
+
+    <div class="messages">
+    </div>
+
+    <form class="input-area">
+      <input type="text" placeholder="Type a message..." autocomplete="off" />
+      <button type="submit">Send</button>
+    </form>
+  </simple-chat>
+</body>
+</html>
