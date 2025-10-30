@@ -2,7 +2,7 @@ class ChatView {
   constructor(component) {
     this.messagesContainer = component.querySelector('.messages');
     this.form = component.querySelector('form.input-area');
-    this.input = component.querySelector('input');
+    this.input = component.querySelector('input#message-input');
     this.clearButton = document.getElementById('clear-button');
     this.messageCountEl = document.getElementById('message-count');
   }

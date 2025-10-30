@@ -15,27 +15,28 @@
         <button id="clear-button">Clear</button>
         <button id="export-button">Export</button>
         <button id="import-button">Import</button>
-        <chat-container>
-          <select id="model-select">
-            <option value="eliza" selected>Eliza</option>
-            <option value="openai">OpenAI</option>
-            <option value="claude">Claude</option>
-          </select>
-          <model-input>
-            <input type="text" id="model-input" placeholder="API Key"/>
-          </model-input>
-        </chat-container>
         <div class="header-right">
           <span id="message-count">0</span> messages
         </div>
       </div>
+
+      <div class="model-section">
+        <label for="model-select">Model:</label>
+        <select id="model-select">
+          <option value="eliza" selected>Eliza</option>
+          <option value="openai">OpenAI</option>
+          <option value="claude">Claude</option>
+        </select>
+
+        <input type="text" id="model-input" placeholder="API Key" />
+        <button id="API-save">Save</button>
+      </div>
     </title-text>
 
-    <div class="messages">
-    </div>
+    <div class="messages"></div>
 
     <form class="input-area">
-      <input type="text" placeholder="Type a message..." autocomplete="off" />
+      <input id="message-input" type="text" placeholder="Type a message..." autocomplete="off" />
       <button type="submit">Send</button>
     </form>
   </simple-chat>
