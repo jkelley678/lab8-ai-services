@@ -27,7 +27,9 @@ class ChatModel {
    */
   deleteMessage(id) {
     const index = this.messages.findIndex(msg => msg.id === id);
-    this.messages.splice(index, 1);
+    if (index !== -1) { 
+        this.messages.splice(index, 1);
+    }
   }
   /**
    * Edit the text of an existing message.
@@ -36,18 +38,11 @@ class ChatModel {
    * @param {string} newText - The new text for the message.
    * @returns {void}
    */
-  editMessage(id, newText) {
-    const message = this.messages.find(msg => msg.id === id);
-    message.text = newText;
-
-  }
-  /**
-   * Remove all messages from the model.
-   *
-   * @returns {void}
-   */
-  clearMessages() {
-    this.messages = [];
+  editMessage(id, newText) { // <--- NEW METHOD
+    const message = this.messages.find(msg => msg.id == id);
+    if (message) {
+      message.text = newText;
+    }
   }
 }
 

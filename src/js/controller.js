@@ -3,11 +3,12 @@ class ChatController {
     this.model = model;
     this.view = view;
     this.getBotResponse = getBotResponse;
-
+    
     this.loadMessages();
     this.addBotMessage('Hello! How can I help you today?');
     this.initEventListeners();
   }
+  
   /**
    * Wire DOM event listeners for form submit, clear, export and import controls.
    * @returns {void}
@@ -18,8 +19,11 @@ class ChatController {
     document.getElementById('export-button')?.addEventListener('click', () => this.exportLocalStorage());
     document.getElementById('import-button')?.addEventListener('click', () => this.importLocalStorage());
   }
+
   /**
    * Handle form submission from the view.
+   * NOTE: This function is synchronous to ensure the user message is sent instantly.
+   *
    * @param {Event} event - The submit event from the form.
    * @returns {void}
    */
@@ -28,123 +32,160 @@ class ChatController {
     const message = this.view.getInputValue();
     if (!message) return;
 
-    this.addUserMessage(message);
-    const response = this.getBotResponse(message);
-    this.addBotMessage(response);
+    this.addUserMessage(message); 
+    this.view.setInputValue(''); 
+
+    this.getBotResponse(message)
+        .then(response => {
+            this.addBotMessage(response);
+        })
+        .catch(error => {
+            console.error('LLM/Eliza call failed:', error);
+            this.addBotMessage(`[Error] Failed to get response: ${error.message || error}`);
+        });
   }
+
   /**
-   * Add a user message to the model and view, persist and update UI.
-   * @param {string} text - The user's message text.
+   * Add a user message to the model and view.
+   * @param {string} text - Message text.
    * @returns {void}
    */
   addUserMessage(text) {
-    const msg = this.model.addMessage('user', text);
-    this.view.addMessage('user', `User: ${text}`, msg.id,
-      (el) => this.deleteMessage(el),
-      (textEl, id) => this.editMessage(textEl, id)
+    const message = this.model.addMessage('user', text);
+    this.view.addMessage(
+      message.sender, 
+      message.text, 
+      message.id, 
+      () => this.deleteMessage(message.id), 
+      this.editUserMessage.bind(this)
     );
-    this.view.clearInput();
     this.saveMessages();
-    localStorage.setItem('user', JSON.stringify(text));
   }
+
   /**
-   * Add a bot message to the model and view, and persist it.
-   * @param {string} text - The bot's reply text.
+   * Add a bot message to the model and view.
+   * @param {string} text - Message text.
    * @returns {void}
    */
   addBotMessage(text) {
-    this.model.addMessage('bot', text);
-    this.view.addMessage('bot', `Bot: ${text}`, Date.now());
+    const message = this.model.addMessage('bot', text);
+    this.view.addMessage(message.sender, message.text, message.id);
     this.saveMessages();
-    localStorage.setItem('bot', JSON.stringify(text));
   }
+
   /**
-   * Delete a message from model and view by using its element.
-   * @param {HTMLElement} el - The message DOM element to remove (must have data-id).
+   * Delete a message from the model and view.
+   * @param {number} id - The id of the message to delete.
    * @returns {void}
    */
-  deleteMessage(el) {
-    const id = +el.dataset.id;
+  deleteMessage(id) {
     this.model.deleteMessage(id);
-    el.remove();
+    this.view.deleteMessage(id);
     this.saveMessages();
-    this.view.updateMessageCount?.(-1);
   }
+  
   /**
-   * Prompt the user to edit a message and update model + view if changed.
-   * @param {HTMLElement} textEl - The element that contains the message text.
-   * @param {number} id - The id of the message to edit.
+   * Handles the message editing process.
+   * It takes the message text element, shows a prompt, and if successful,
+   * updates the model and view.
+   * * @param {HTMLElement} textEl - The element containing the text to edit.
+   * @param {number} id - The id of the message being edited.
    * @returns {void}
    */
-  editMessage(textEl, id) {
-    const current = textEl.textContent.replace(/^User:\s*/, '');
-    const updated = prompt('Edit your message:', current);
-    if (updated !== null) {
-      textEl.textContent = `User: ${updated}`;
-      this.model.editMessage(id, updated);
+  editUserMessage(textEl, id) {
+    const oldText = textEl.textContent;
+    const newText = prompt('Edit your message:', oldText);
+
+    if (newText && newText.trim() !== oldText.trim()) {
+      this.model.editMessage(id, newText.trim());
+
+      this.view.editMessage(id, newText.trim());
+      
+      this.saveMessages();
     }
   }
+
   /**
-   * Clear the chat after user confirmation, remove persisted data and update UI.
-   * @returns {void}
-   */
-  clearChat() {
-    if (!confirm('Are you sure you want to clear the chat history?')) return;
-    this.view.clearChat();
-    this.model.clearMessages();
-    localStorage.clear();
-    alert('Chat history and localStorage have been cleared.');
-  }
-  /**
-   * Load messages from localStorage into the model and render them via the view.
+   * Load messages from localStorage and render them.
    * @returns {void}
    */
   loadMessages() {
     try {
-      const data = JSON.parse(localStorage.getItem('chatMessages') || '[]');
-      this.model.messages = data;
+      const messagesJSON = localStorage.getItem('chatMessages');
+      if (messagesJSON) {
+        this.model.messages = JSON.parse(messagesJSON);
+        this.model.messages.forEach(message => {
 
-      data.forEach(msg =>
-        this.view.addMessage(msg.sender, `${msg.sender === 'user' ? 'User' : 'Bot'}: ${msg.text}`, msg.id,
-          msg.sender === 'user' ? (el) => this.deleteMessage(el) : null,
-          msg.sender === 'user' ? (textEl, id) => this.editMessage(textEl, id) : null
-        )
-      );
+          let onDeleteCallback = undefined;
+          let onEditCallback = undefined;
 
-      this.view.updateMessageCount?.(true);
+          if (message.sender === 'user') {
+            onDeleteCallback = () => this.deleteMessage(message.id);
+            onEditCallback = this.editUserMessage.bind(this);
+          }
+
+
+          this.view.addMessage(
+            message.sender, 
+            message.text, 
+            message.id, 
+            onDeleteCallback, 
+            onEditCallback    
+          );
+        });
+      }
     } catch (e) {
-      console.error('Error loading messages from localStorage:', e);
+      console.error('Error loading messages from localStorage', e);
     }
   }
+
   /**
-   * Persist the current model messages to localStorage.
+   * Saves the current messages array to localStorage.
    * @returns {void}
    */
   saveMessages() {
-    localStorage.setItem('chatMessages', JSON.stringify(this.model.messages));
+    try {
+      localStorage.setItem('chatMessages', JSON.stringify(this.model.messages));
+    } catch (e) {
+      console.error('Error saving messages to localStorage', e);
+    }
   }
+
   /**
-   * Export the entire localStorage as a downloadable JSON file.
+   * Clear all messages from the model, view, and localStorage.
+   * @returns {void}
+   */
+  clearChat() {
+    if (!confirm('Are you sure you want to clear the entire chat history? This cannot be undone.')) return;
+    this.model.messages = [];
+    this.view.clearChat();
+    this.saveMessages();
+    this.addBotMessage('Hello! How can I help you today?');
+  }
+
+  /**
+   * Export all localStorage data (including chat messages and API keys) to a JSON file.
    * @returns {void}
    */
   exportLocalStorage() {
     try {
-      const data = Object.fromEntries(
-        Array.from({ length: localStorage.length }, (_, i) => {
-          const key = localStorage.key(i);
-          try {
-            return [key, JSON.parse(localStorage.getItem(key))];
-          } catch {
-            return [key, localStorage.getItem(key)];
-          }
-        })
-      );
+      const data = {};
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
 
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        if (key === 'chatMessages') {
+          data[key] = JSON.parse(localStorage.getItem(key));
+        } else {
+          data[key] = localStorage.getItem(key);
+        }
+      }
+
+      const json = JSON.stringify(data, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = Object.assign(document.createElement('a'), {
         href: url,
-        download: `lab7-localStorage-${new Date().toISOString().replace(/[:.]/g, '-')}.json`
+        download: `chat-export-${new Date().toISOString().replace(/[:.]/g, '-')}.json`
       });
       document.body.append(a);
       a.click();
@@ -167,19 +208,23 @@ class ChatController {
         if (!data.chatMessages) return alert('Invalid file format. No chatMessages found.');
 
         localStorage.clear();
-        Object.entries(data).forEach(([k, v]) => localStorage.setItem(k, JSON.stringify(v)));
+
+        Object.entries(data).forEach(([k, v]) => {
+          const valueToStore = (k === 'chatMessages') ? JSON.stringify(v) : v;
+          localStorage.setItem(k, valueToStore);
+        });
 
         this.model.messages = data.chatMessages;
         this.view.clearChat();
         this.loadMessages();
         this.saveMessages();
 
-        alert('Chat history successfully imported!');
+        alert('Chat history successfully imported! Reloading chat...');
       });
-      input.click();
+      input.click(); 
     } catch (e) {
       console.error('Import failed', e);
-      alert('Failed to import chat history. See console for details.');
+      alert('Failed to import data. See console for details.');
     }
   }
 }
