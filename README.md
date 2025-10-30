@@ -52,6 +52,8 @@ Test results and reports will be available in the `test-results/` and `playwrigh
 - `src/js/eliza.js`: Implements the ELIZA chatbot logic.
 - `src/js/controller.js`, `model.js`, `view.js`, `app.js`: MVC structure for the app.
 - `tests/`: Contains Playwright test scripts.
+## Netlify Link
+https://jkelley-lab8.netlify.app/
 
 ## License
 This project is licensed under the MIT License - see LICENSE.md for details.
