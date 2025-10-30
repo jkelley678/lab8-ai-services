@@ -15,6 +15,16 @@
         <button id="clear-button">Clear</button>
         <button id="export-button">Export</button>
         <button id="import-button">Import</button>
+        <chat-container>
+          <select id="model-select">
+            <option value="eliza" selected>Eliza</option>
+            <option value="openai">OpenAI</option>
+            <option value="claude">Claude</option>
+          </select>
+          <model-input>
+            <input type="text" id="model-input" placeholder="API Key"/>
+          </model-input>
+        </chat-container>
         <div class="header-right">
           <span id="message-count">0</span> messages
         </div>

@@ -151,7 +151,9 @@ title-text h1{
     background: #fff;
     border-top: 1px solid #ccc;
 }
-
+model-input input{
+  width:60px;
+}
 
 .input-area input {
     flex: 1;
