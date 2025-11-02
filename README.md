@@ -46,7 +46,12 @@ Run Playwright tests with:
 npm test
 ```
 Test results and reports will be available in the `test-results/` and `playwright-report/` directories.
+## Issues
+I have a few issues in my code that I hope to get sorted out. 
 
+First, I used OpenAI because I wasn't able to get a Gemini API Key. Odds are It was an error on my part, but I spent a good part of an hour trying to figure it out. Becasue of this, the OpenAI API key will have to be replaced often because I am using the free version. This led me to not doing comparison examples. 
+
+Within my Playwright, it wasn't able to open Firefox to run the tests. I tried multiple times to get it to work, yet everytime it failed. Installing it didn't work on multiple occasions.
 ## File Descriptions
 - `src/js/llm.js`: Handles communication with LLM APIs.
 - `src/js/eliza.js`: Implements the ELIZA chatbot logic.

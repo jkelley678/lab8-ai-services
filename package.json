@@ -19,6 +19,7 @@
   "homepage": "https://github.com/jkelley678/lab8-ai-services#readme",
   "devDependencies": {
     "@playwright/test": "^1.56.1",
-    "@types/node": "^24.9.2"
+    "@types/node": "^24.9.2",
+    "dotenv": "^17.2.3"
   }
 }

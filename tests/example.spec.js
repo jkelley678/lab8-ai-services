@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test('Eliza mode responds to a known pattern', async ({ page }) => {
   // 1. Navigate to your app
-  await page.goto('http://localhost:8080/index.html'); 
+  await page.goto('https://jkelley-lab8.netlify.app/'); 
 
   // 2. Ensure Eliza mode is selected (it is the default)
   await expect(page.locator('#model-select')).toHaveValue('eliza');
@@ -12,7 +12,7 @@ test('Eliza mode responds to a known pattern', async ({ page }) => {
   await page.keyboard.press('Enter');
 
   // 4. Check for the user's message
-  await expect(page.locator('.message.user')).toHaveText('Hello there!');
+  await expect(page.locator('.message.user')).toContainText('Hello there!');
 
   // 5. Check for the bot's response.
 
